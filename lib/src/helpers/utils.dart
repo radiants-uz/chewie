@@ -1,32 +1,22 @@
 String formatDuration(Duration position) {
   final ms = position.inMilliseconds;
 
-  int seconds = ms ~/ 1000;
-  final int hours = seconds ~/ 3600;
+  var seconds = ms ~/ 1000;
+  final hours = seconds ~/ 3600;
   seconds = seconds % 3600;
   final minutes = seconds ~/ 60;
   seconds = seconds % 60;
 
-  final hoursString = hours >= 10
-      ? '$hours'
-      : hours == 0
-          ? '00'
-          : '0$hours';
+  // Ensure the strings are always two digits
+  final hoursString = hours.toString().padLeft(2, '0');
+  final minutesString = minutes.toString().padLeft(2, '0');
+  final secondsString = seconds.toString().padLeft(2, '0');
 
-  final minutesString = minutes >= 10
-      ? '$minutes'
-      : minutes == 0
-          ? '00'
-          : '0$minutes';
+  final formattedTime = '$hoursString:$minutesString:$secondsString';
 
-  final secondsString = seconds >= 10
-      ? '$seconds'
-      : seconds == 0
-          ? '00'
-          : '0$seconds';
-
-  final formattedTime =
-      '${hoursString == '00' ? '' : '$hoursString:'}$minutesString:$secondsString';
+  if (hours == 0) {
+    return '$minutesString:$secondsString';
+  }
 
   return formattedTime;
 }

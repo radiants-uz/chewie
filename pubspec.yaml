@@ -1,24 +1,54 @@
 name: chewie
 description: A video player for Flutter with Cupertino and Material play controls
-version: 1.8.5
+version: 1.9.3
 homepage: https://github.com/fluttercommunity/chewie
+publish_to: none
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: ">=3.3.0 <4.0.0"
   flutter: ">=3.19.0"
 
 dependencies:
+  audio_service: ^0.18.15
   cupertino_icons: ^1.0.5
+  dio: ^5.7.0
+  dio_cache_interceptor: ^3.5.0
+  double_tap_player_view: ^2.0.3
+  easy_localization: ^3.0.7
+  equatable: ^2.0.5
+  expandable_page_view: ^1.0.17
+  floating: ^4.0.1
   flutter:
     sdk: flutter
+  flutter_animate: ^4.5.0
+  flutter_cast_video: ^1.2.0
+  flutter_svg: ^2.0.10+1
+  gap: ^3.0.1
+  modal_bottom_sheet: ^3.0.0
+  path_provider: ^2.1.4
   provider: ^6.1.2
+  screen_brightness: ^1.0.1
+  shelf: ^1.4.1
   video_player: ^2.9.1
+  pip_manager:
+    git:
+      url: https://github.com/radiants-uz/pip_manager.git
+      ref: master
+  volume_controller: ^2.0.8
   wakelock_plus: ^1.2.8
+  shared_preferences: ^2.3.2
+  just_audio: ^0.9.41
+  just_audio_background: ^0.0.1-beta.13
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  very_good_analysis: ^6.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/icons/custom/v1/
+    - assets/locales/
