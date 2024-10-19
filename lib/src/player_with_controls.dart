@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +22,7 @@ class PlayerWithControls extends StatefulWidget {
 class _PlayerWithControlsState extends State<PlayerWithControls>
     with WidgetsBindingObserver {
   late ChewieController _chewieController = ChewieController.of(context);
+  bool _wasPlaying = false;
 
   @override
   void initState() {
@@ -41,15 +40,13 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    log(state.name);
-    log(isInBg.toString());
-
     if (!isInBg) {
       isInBg = state == AppLifecycleState.paused ||
           state == AppLifecycleState.hidden;
     }
 
     if (isInBg) {
+      _wasPlaying = _chewieController.videoPlayerController.value.isPlaying;
       await _chewieController.pause();
       await _chewieController.audioHandler?.startBgPlay(
         _chewieController.videoPlayerController.value.position,
@@ -61,10 +58,11 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
     if (state == AppLifecycleState.resumed && isInBg) {
       isInBg = false;
       final lastPosition = _chewieController.audioHandler?.stopBgPlay();
-      log(lastPosition.toString());
       if (lastPosition == null) return;
       await _chewieController.videoPlayerController.seekTo(lastPosition);
-      await _chewieController.play();
+      if (_wasPlaying) {
+        await _chewieController.play();
+      }
     }
     super.didChangeAppLifecycleState(state);
   }
