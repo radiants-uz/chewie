@@ -415,7 +415,7 @@ class _MaterialControlsState extends State<MaterialControls> {
         widget.showPlayButton && !_dragging && !notifier.hideStuff;
 
     return IgnorePointer(
-      ignoring: notifier.lockStuff,
+      ignoring: notifier.hideStuff || notifier.lockStuff,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -430,7 +430,7 @@ class _MaterialControlsState extends State<MaterialControls> {
               ),
             ),
           SizedBox(
-            width: 70,
+            width: 96,
             child: _displayBufferingIndicator
                 ? _chewieController?.bufferingBuilder?.call(context) ??
                     const Center(

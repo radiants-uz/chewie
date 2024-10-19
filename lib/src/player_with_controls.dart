@@ -50,13 +50,12 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
     }
 
     if (isInBg) {
-      if (_chewieController.isPlaying) {
-        await _chewieController.pause();
-        await _chewieController.audioHandler?.startBgPlay(
-          _chewieController.videoPlayerController.value.position,
-          _chewieController.videoPlayerController.value.playbackSpeed,
-        );
-      }
+      await _chewieController.pause();
+      await _chewieController.audioHandler?.startBgPlay(
+        _chewieController.videoPlayerController.value.position,
+        _chewieController.videoPlayerController.value.playbackSpeed,
+        _chewieController.videoPlayerController.value.isPlaying,
+      );
     }
 
     if (state == AppLifecycleState.resumed && isInBg) {
@@ -151,13 +150,13 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
                           PlayerNotifier notifier,
                           Widget? widget,
                         ) =>
-                            Visibility(
-                          visible: !notifier.hideStuff,
+                            IgnorePointer(
                           child: AnimatedOpacity(
                             opacity: notifier.hideStuff ? 0.0 : 0.8,
                             duration: const Duration(
                               milliseconds: 250,
                             ),
+                            curve: Curves.ease,
                             child: const DecoratedBox(
                               decoration: BoxDecoration(color: Colors.black54),
                               child: SizedBox.expand(),

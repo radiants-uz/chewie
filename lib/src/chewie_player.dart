@@ -82,6 +82,12 @@ class ChewieState extends State<Chewie> {
   }
 
   Future<void> listener() async {
+    if (isReloadDataSource) {
+      isReloadDataSource = false;
+
+      return;
+    }
+
     if (isControllerFullScreen && !_isFullScreen) {
       _isFullScreen = isControllerFullScreen;
       await _pushFullScreenWidget(context);
@@ -281,6 +287,8 @@ class MediaDescription {
   final String? poster;
   final String? subtitle;
 }
+
+bool isReloadDataSource = false;
 
 /// The ChewieController is used to configure and drive the Chewie Player
 /// Widgets. It provides methods to control playback, such as [pause] and
@@ -969,6 +977,7 @@ class ChewieController extends ChangeNotifier {
     final prevPosition = _videoPlayerController.value.position;
     final speed = _videoPlayerController.value.playbackSpeed;
     _isInitialized.value = false;
+    isReloadDataSource = true;
     await _videoPlayerController.dispose();
     _videoPlayerController = VideoPlayerController.networkUrl(
       Uri.parse(_videoPlayerController.dataSource),

@@ -4,7 +4,7 @@ class PlayerAnimation extends StatefulWidget {
   const PlayerAnimation({
     required this.child,
     required this.value,
-    this.duration = const Duration(milliseconds: 300),
+    this.duration = const Duration(milliseconds: 200),
     this.alignment = Alignment.center,
     this.disableScale = false,
     super.key,
@@ -45,13 +45,13 @@ class _PlayerAnimationState extends State<PlayerAnimation>
   void initState() {
     switch (widget.alignment) {
       case Alignment.topCenter:
-        initialOffset = const Offset(0, -200);
+        initialOffset = const Offset(0, -20);
       case Alignment.bottomCenter:
-        initialOffset = const Offset(0, 200);
+        initialOffset = const Offset(0, 20);
       case Alignment.centerLeft:
-        initialOffset = const Offset(-100, 0);
+        initialOffset = const Offset(-20, 0);
       case Alignment.centerRight:
-        initialOffset = const Offset(100, 0);
+        initialOffset = const Offset(20, 0);
     }
 
     animationOffset = Tween<Offset>(
@@ -60,7 +60,7 @@ class _PlayerAnimationState extends State<PlayerAnimation>
     ).animate(
       CurvedAnimation(
         parent: animationController,
-        curve: Curves.ease,
+        curve: Curves.easeOutSine,
       ),
     );
 
@@ -96,13 +96,7 @@ class _PlayerAnimationState extends State<PlayerAnimation>
         builder: (context, child) {
           return Transform.translate(
             offset: animationOffset.value,
-            child: widget.disableScale
-                ? child
-                : Transform.scale(
-                    scale: 1.333 - animationValue.value / 3,
-                    alignment: widget.alignment,
-                    child: child,
-                  ),
+            child: child,
           );
         },
         child: widget.child,

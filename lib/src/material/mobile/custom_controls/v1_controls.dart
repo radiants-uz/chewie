@@ -395,16 +395,6 @@ class _V1ControlsState extends State<V1Controls>
     }
   }
 
-  Widget _buildHitArea() {
-    return GestureDetector(
-      onTap: _showOrHide,
-      child: Container(
-        alignment: Alignment.center,
-        color: Colors.transparent,
-      ),
-    );
-  }
-
   Widget _buildPlayPause() {
     final isFinished = (_latestValue.position >= _latestValue.duration) &&
         _latestValue.duration.inSeconds > 0;
@@ -412,7 +402,7 @@ class _V1ControlsState extends State<V1Controls>
         widget.showPlayButton && !_dragging && !notifier.hideStuff;
 
     return IgnorePointer(
-      ignoring: notifier.lockStuff,
+      ignoring: notifier.hideStuff || notifier.lockStuff,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
