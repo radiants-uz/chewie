@@ -47,12 +47,12 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
 
     if (isInBg) {
       _wasPlaying = _chewieController.videoPlayerController.value.isPlaying;
-      await _chewieController.pause();
       await _chewieController.audioHandler?.startBgPlay(
         _chewieController.videoPlayerController.value.position,
         _chewieController.videoPlayerController.value.playbackSpeed,
         _chewieController.videoPlayerController.value.isPlaying,
       );
+      await _chewieController.pause();
     }
 
     if (state == AppLifecycleState.resumed && isInBg) {
