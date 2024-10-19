@@ -6,6 +6,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cast_video/flutter_cast_video.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pip_manager/pip_manager.dart';
 import 'package:provider/provider.dart';
@@ -825,6 +826,8 @@ class ChewieController extends ChangeNotifier {
 
   final HttpServer? server;
 
+  AudioPlayer? audioPlayer;
+
   static ChewieController of(BuildContext context) {
     final chewieControllerProvider =
         context.dependOnInheritedWidgetOfExactType<ChewieControllerProvider>()!;
@@ -902,14 +905,6 @@ class ChewieController extends ChangeNotifier {
       subtitle: description?.subtitle ?? '',
     );
     await _videoPlayerController.pause();
-  }
-
-  static Future<void> initializeBg() async {
-    // return JustAudioBackground.init(
-    //   androidNotificationChannelId: 'uz.intersoft.chewie.channel.audio',
-    //   androidNotificationChannelName: 'Audio playback',
-    //   androidNotificationOngoing: true,
-    // );
   }
 
   Future<void> setVideoTrack(VideoTrack track) async {
@@ -1075,6 +1070,8 @@ class ChewieController extends ChangeNotifier {
   }
 
   Future<void> initializeAudio() async {
+    audioPlayer = AudioPlayer();
+
     _audioHandler = await AudioService.init(
       builder: AudioPlayerHandler.new,
       config: const AudioServiceConfig(
@@ -1093,6 +1090,7 @@ class ChewieController extends ChangeNotifier {
         artUri: Uri.tryParse(description?.poster ?? ''),
         duration: _videoPlayerController.value.duration,
       ),
+      audioPlayer!,
     );
 
     _audioHandler?.setVideoFunctions(_videoPlayerController.play,
@@ -1102,7 +1100,9 @@ class ChewieController extends ChangeNotifier {
         ..pause();
     });
 
-    _audioHandler?.initializeStreamController(_videoPlayerController);
+    _audioHandler?.initializeStreamController(
+      videoPlayerController: _videoPlayerController,
+    );
 
     await _audioHandler?.playbackState
         .addStream(_audioHandler!.streamController.stream);

@@ -22,7 +22,6 @@ class PlayerWithControls extends StatefulWidget {
 class _PlayerWithControlsState extends State<PlayerWithControls>
     with WidgetsBindingObserver {
   late ChewieController _chewieController = ChewieController.of(context);
-  bool _wasPlaying = false;
 
   @override
   void initState() {
@@ -45,25 +44,22 @@ class _PlayerWithControlsState extends State<PlayerWithControls>
           state == AppLifecycleState.hidden;
     }
 
-    if (isInBg) {
-      _wasPlaying = _chewieController.videoPlayerController.value.isPlaying;
+    if (state == AppLifecycleState.resumed && isInBg) {
+      isInBg = false;
+      _chewieController.audioHandler?.stopBgPlay();
+      await _chewieController.play();
+    }
+
+    if (isInBg && state != AppLifecycleState.resumed) {
+      final isPlaying = _chewieController.videoPlayerController.value.isPlaying;
+      await _chewieController.pause();
       await _chewieController.audioHandler?.startBgPlay(
         _chewieController.videoPlayerController.value.position,
         _chewieController.videoPlayerController.value.playbackSpeed,
-        _chewieController.videoPlayerController.value.isPlaying,
+        isPlaying,
       );
-      await _chewieController.pause();
     }
 
-    if (state == AppLifecycleState.resumed && isInBg) {
-      isInBg = false;
-      final lastPosition = _chewieController.audioHandler?.stopBgPlay();
-      if (lastPosition == null) return;
-      await _chewieController.videoPlayerController.seekTo(lastPosition);
-      if (_wasPlaying) {
-        await _chewieController.play();
-      }
-    }
     super.didChangeAppLifecycleState(state);
   }
 

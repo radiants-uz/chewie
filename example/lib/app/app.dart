@@ -86,6 +86,10 @@ class _ChewieDemoState extends State<ChewieDemo> {
             zoomAndPan: true,
             description: const MediaDescription(
               title: 'Тень и кость (сериал 2021)',
+              subtitle: 'asd',
+              artist: 'asd',
+              poster:
+                  'https://m.media-amazon.com/images/I/619RmKdoIiL._AC_UF1000,1000_QL80_.jpg',
             ),
             thumbnails: const MediaThumbnail(
               medium: thumbnailTest,
@@ -112,7 +116,7 @@ class _ChewieDemoState extends State<ChewieDemo> {
     final resolutionPattern = RegExp(r'RESOLUTION=(\d+x\d+)');
     // final bandwidthPattern = RegExp(r'BANDWIDTH=(\d+)');
     // final codecPattern = RegExp(r'CODECS="([^"]+)"');
-    final urlPattern = RegExp(r'(url_\d+\/[^\s]+\.m3u8)');
+    // final urlPattern = RegExp(r'(url_\d+\/[^\s]+\.m3u8)');
 
     // final directory = await getTemporaryDirectory();
     // Replace all relative URLs with the full absolute URL
@@ -124,15 +128,14 @@ class _ChewieDemoState extends State<ChewieDemo> {
     final resolutions = resolutionPattern.allMatches(master);
     // final bandwidths = bandwidthPattern.allMatches(master);
     // final codecs = codecPattern.allMatches(master);
-    final urls = urlPattern.allMatches(master);
-
+    // final urls = urlPattern.allMatches(master);
+//
     // Iterate through matches and print out resolution, bandwidth, codecs, and URL
     for (var i = 0; i < resolutions.length; i++) {
       // final resolution = resolutions.elementAt(i).group(1);
       // final bandwidth = bandwidths.elementAt(i).group(1);
       // final codec = codecs.elementAt(i).group(1);
-      final streamUrl = urls.elementAt(i).group(1);
-
+      // final streamUrl = urls.elementAt(i).group(1);
       // print(
       //     'Resolution: $resolution, Bandwidth: $bandwidth, Codecs: $codec, URL: $streamUrl');
 
@@ -268,6 +271,7 @@ class _ChewieDemoState extends State<ChewieDemo> {
             child: CircularProgressIndicator(),
           )
         : MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: widget.title,
             theme: AppTheme.light.copyWith(
               platform: _platform ?? Theme.of(context).platform,

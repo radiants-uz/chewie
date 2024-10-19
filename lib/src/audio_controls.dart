@@ -4,8 +4,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
-import 'player_with_controls.dart';
-
 class MediaState {
   MediaState(this.mediaItem, this.position);
   final MediaItem? mediaItem;
@@ -17,19 +15,21 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   late StreamController<PlaybackState> streamController;
 
   MediaItem? media;
-  AudioPlayer? audioPlayer;
-  Duration? position;
+  AudioPlayer? _audioPlayer;
+  Duration? _position;
+  bool _isAudioPlaying = false;
+  VideoPlayerController? _controller;
 
   late void Function(Duration)? _videoSeek;
   late void Function()? _videoPlay;
   late void Function()? _videoPause;
   late void Function()? _videoStop;
 
-  void setMedia(MediaItem newMedia) {
+  void setMedia(MediaItem newMedia, AudioPlayer audioPlayer) {
     media = newMedia;
-    audioPlayer = AudioPlayer();
-    audioPlayer?.createPositionStream();
-    audioPlayer?.setUrl(
+    _audioPlayer = audioPlayer;
+    _audioPlayer?.createPositionStream();
+    _audioPlayer?.setUrl(
       media!.id,
       tag: newMedia,
     );
@@ -41,17 +41,24 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     // ignore: avoid_positional_boolean_parameters
     bool isPlaying,
   ) async {
-    await audioPlayer?.seek(position);
-    await audioPlayer!.setSpeed(speed);
+    _controller?.removeListener(addVideoEvent);
+    _isAudioPlaying = true;
+    await _audioPlayer?.seek(position);
+    await _audioPlayer!.setSpeed(speed);
+
     if (isPlaying) {
-      await audioPlayer?.play();
+      await _audioPlayer?.play();
     }
   }
 
   Duration? stopBgPlay() {
-    audioPlayer?.stop();
+    final pos = _position;
 
-    return position;
+    _isAudioPlaying = false;
+    _audioPlayer?.stop();
+    _controller?.addListener(addVideoEvent);
+
+    return pos;
   }
 
   void setVideoFunctions(
@@ -74,8 +81,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> play() async {
-    if (isInBg) {
-      await audioPlayer!.play();
+    if (_isAudioPlaying) {
+      await _audioPlayer!.play();
       return;
     }
     _videoPlay!();
@@ -83,8 +90,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> pause() async {
-    if (isInBg) {
-      await audioPlayer!.pause();
+    if (_isAudioPlaying) {
+      await _audioPlayer!.pause();
       return;
     }
     _videoPause!();
@@ -92,8 +99,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> seek(Duration position) async {
-    if (isInBg) {
-      await audioPlayer!.seek(position);
+    if (_isAudioPlaying) {
+      await _audioPlayer!.seek(position);
       return;
     }
     _videoSeek!(position);
@@ -101,8 +108,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> stop() async {
-    if (isInBg) {
-      await audioPlayer!.seek(Duration.zero);
+    if (_isAudioPlaying) {
+      await _audioPlayer!.seek(Duration.zero);
       return;
     }
     _videoStop!();
@@ -114,86 +121,104 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  void initializeStreamController(
-    VideoPlayerController? videoPlayerController,
-  ) {
-    bool isPlaying() => isInBg
-        ? audioPlayer?.playing ?? false
-        : videoPlayerController?.value.isPlaying ?? false;
+  bool isPlaying() => _isAudioPlaying
+      ? _audioPlayer?.playing ?? false
+      : _controller?.value.isPlaying ?? false;
 
-    AudioProcessingState processingState() {
-      if (videoPlayerController == null) return AudioProcessingState.idle;
-      if (videoPlayerController.value.isInitialized) {
-        return AudioProcessingState.ready;
-      }
-      return AudioProcessingState.idle;
+  AudioProcessingState processingState() {
+    if (_controller == null) return AudioProcessingState.idle;
+    if (_controller!.value.isInitialized) {
+      return AudioProcessingState.ready;
     }
+    return AudioProcessingState.idle;
+  }
 
-    Duration bufferedPosition() {
-      if (audioPlayer != null && audioPlayer!.playing) {
-        try {
-          return audioPlayer!.bufferedPosition;
-        } catch (err) {
-          return Duration.zero;
-        }
-      }
-
+  Duration bufferedPosition() {
+    if (_audioPlayer != null && _isAudioPlaying) {
       try {
-        final currentBufferedRange =
-            videoPlayerController?.value.buffered.firstWhere((durationRange) {
-          final position = videoPlayerController.value.position;
-          final isCurrentBufferedRange =
-              durationRange.start < position && durationRange.end > position;
-          return isCurrentBufferedRange;
-        });
-        if (currentBufferedRange == null) return Duration.zero;
-        return currentBufferedRange.end;
+        return _audioPlayer!.bufferedPosition;
       } catch (err) {
         return Duration.zero;
       }
     }
 
-    void addVideoEvent() {
-      streamController.add(
-        PlaybackState(
-          controls: [
-            MediaControl.rewind,
-            if (isPlaying()) MediaControl.pause else MediaControl.play,
-            MediaControl.stop,
-            MediaControl.fastForward,
-          ],
-          systemActions: const {
-            MediaAction.seek,
-            MediaAction.seekForward,
-            MediaAction.seekBackward,
-          },
-          androidCompactActionIndices: const [0, 1, 3],
-          processingState: processingState(),
-          playing: isPlaying(),
-          updatePosition: ((audioPlayer?.playing ?? false)
-                  ? audioPlayer?.position
-                  : videoPlayerController?.value.position) ??
-              Duration.zero,
-          bufferedPosition: bufferedPosition(),
-          speed: videoPlayerController?.value.playbackSpeed ?? 1.0,
-        ),
-      );
+    try {
+      final currentBufferedRange =
+          _controller?.value.buffered.firstWhere((durationRange) {
+        final position = _controller!.value.position;
+        final isCurrentBufferedRange =
+            durationRange.start < position && durationRange.end > position;
+        return isCurrentBufferedRange;
+      });
+      if (currentBufferedRange == null) return Duration.zero;
+      return currentBufferedRange.end;
+    } catch (err) {
+      return Duration.zero;
     }
+  }
 
-    void startStream() {
-      videoPlayerController?.addListener(addVideoEvent);
-      audioPlayer?.playbackEventStream.listen((data) {
+  void addVideoEvent() {
+    streamController.add(
+      PlaybackState(
+        controls: [
+          MediaControl.rewind,
+          if (isPlaying()) MediaControl.pause else MediaControl.play,
+          MediaControl.stop,
+          MediaControl.fastForward,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+        },
+        androidCompactActionIndices: const [0, 1, 3],
+        processingState: processingState(),
+        playing: isPlaying(),
+        updatePosition: (_isAudioPlaying
+                ? _audioPlayer?.position
+                : _controller?.value.position) ??
+            Duration.zero,
+        bufferedPosition: bufferedPosition(),
+        speed: _controller?.value.playbackSpeed ?? 1.0,
+      ),
+    );
+  }
+
+  void startStream() {
+    _controller?.addListener(addVideoEvent);
+    _audioPlayer?.playbackEventStream.listen((data) {
+      if (_isAudioPlaying) {
         addVideoEvent();
-      });
-      audioPlayer?.positionStream.listen((data) {
-        position = data;
-      });
-    }
+      }
+    });
+    _audioPlayer?.positionStream.listen((position) {
+      if (_isAudioPlaying) {
+        _position = position;
+        if (position.inSeconds != _controller?.value.position.inSeconds) {
+          _batchUpdatePosition(position);
+        }
+      }
+    });
+  }
 
-    void stopStream() {
-      videoPlayerController?.removeListener(addVideoEvent);
-      streamController.close();
-    }
+  void stopStream() {
+    _controller?.removeListener(addVideoEvent);
+    streamController.close();
+  }
+
+  Timer? _batchUpdateTimer;
+
+  void _batchUpdatePosition(Duration position) {
+    _batchUpdateTimer ??= Timer(const Duration(seconds: 1), () async {
+      await _controller?.seekTo(position);
+      _batchUpdateTimer = null;
+    });
+  }
+
+  void initializeStreamController({
+    VideoPlayerController? videoPlayerController,
+  }) {
+    _controller = videoPlayerController;
 
     streamController = StreamController<PlaybackState>(
       onListen: startStream,

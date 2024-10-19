@@ -25,8 +25,6 @@ void main() async {
   // .setTrustedCertificatesBytes(data.buffer.asUint8List());
   HttpOverrides.global = MyHttpOverrides();
 
-  await ChewieController.initializeBg();
-
   runApp(
     ProviderScope(
       child: EasyLocalization(
@@ -56,6 +54,7 @@ class MyWidget extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
+      debugShowMaterialGrid: false,
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
